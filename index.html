@@ -12,39 +12,76 @@
     .options label { display: block; margin-left: 10px; }
     button { padding: 10px 20px; font-size: 16px; margin-top: 10px; }
     #timer { font-size: 18px; font-weight: bold; color: red; margin-bottom: 20px; }
+    #login { margin-bottom: 30px; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Online Exam</h1>
-    <div id="timer">Time Remaining: 05:00</div>
-    <div id="exam"></div>
-    <button onclick="submitExam()">Submit Exam</button>
-    <div id="result"></div>
+
+    <div id="login">
+      <h2>Login</h2>
+      <label>User ID: <input type="text" id="userId"></label><br><br>
+      <label>Password: <input type="password" id="password"></label><br><br>
+      <button onclick="validateLogin()">Login</button>
+      <p id="loginError" style="color: red;"></p>
+    </div>
+
+    <div id="examSection" style="display:none;">
+      <div id="timer">Time Remaining: 05:00</div>
+      <div id="exam"></div>
+      <button onclick="submitExam()">Submit Exam</button>
+      <div id="result"></div>
+    </div>
   </div>
 
   <script>
+    const validUserId = "192411158";
+    const validPassword = "CSA0826";
+
+    function validateLogin() {
+      const enteredUserId = document.getElementById("userId").value;
+      const enteredPassword = document.getElementById("password").value;
+      const loginError = document.getElementById("loginError");
+
+      if (enteredUserId === validUserId && enteredPassword === validPassword) {
+        document.getElementById("login").style.display = "none";
+        document.getElementById("examSection").style.display = "block";
+        startTimer();
+        loadQuestions();
+      } else {
+        loginError.textContent = "Invalid User ID or Password";
+      }
+    }
+
     const questions = [
       { q: "What is 2 + 2?", options: ["3", "4", "5", "6"], answer: "4" },
       { q: "Capital of France?", options: ["London", "Berlin", "Paris", "Madrid"], answer: "Paris" },
       { q: "Result of 3 * 3?", options: ["6", "8", "9", "12"], answer: "9" },
       { q: "Which is a Python keyword?", options: ["def", "add", "func", "define"], answer: "def" },
-      { q: "HTML stands for?", options: ["Hyper Trainer Marking Language", "Hyper Text Markup Language", "Hyper Tool Multi Language", "None"], answer: "Hyper Text Markup Language" }
+      { q: "HTML stands for?", options: ["Hyper Trainer Marking Language", "Hyper Text Markup Language", "Hyper Tool Multi Language", "None"], answer: "Hyper Text Markup Language" },
+      { q: "Which data type is immutable in Python?", options: ["List", "Set", "Dictionary", "Tuple"], answer: "Tuple" },
+      { q: "What does the len() function do in Python?", options: ["Calculates average", "Counts elements", "Sorts items", "Deletes items"], answer: "Counts elements" },
+      { q: "Which symbol is used to define a function in Python?", options: ["func", "def", "function", "define"], answer: "def" },
+      { q: "What is the output of print(type(10))?", options: ["str", "float", "int", "bool"], answer: "int" },
+      { q: "Which of these is a loop structure in Python?", options: ["repeat", "for", "do while", "loop"], answer: "for" }
     ];
 
     const examContainer = document.getElementById("exam");
     const timerDisplay = document.getElementById("timer");
     let timer, timeLeft = 300;
 
-    questions.forEach((item, index) => {
-      const div = document.createElement("div");
-      div.className = "question";
-      div.innerHTML = `<strong>${index + 1}. ${item.q}</strong>`;
-      item.options.forEach(option => {
-        div.innerHTML += `<div class="options"><label><input type="radio" name="q${index}" value="${option}"> ${option}</label></div>`;
+    function loadQuestions() {
+      questions.forEach((item, index) => {
+        const div = document.createElement("div");
+        div.className = "question";
+        div.innerHTML = `<strong>${index + 1}. ${item.q}</strong>`;
+        item.options.forEach(option => {
+          div.innerHTML += `<div class="options"><label><input type="radio" name="q${index}" value="${option}"> ${option}</label></div>`;
+        });
+        examContainer.appendChild(div);
       });
-      examContainer.appendChild(div);
-    });
+    }
 
     function startTimer() {
       timer = setInterval(() => {
@@ -86,9 +123,6 @@
       document.querySelector("button").style.display = "none";
       timerDisplay.style.display = "none";
     }
-
-    // Start the timer on page load
-    window.onload = startTimer;
   </script>
 </body>
 </html>
