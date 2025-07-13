@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Online Exam with Auto-Grading</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+    .container { max-width: 800px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    h1, h2 { color: #333; }
+    .section { margin-bottom: 30px; }
+    ul { padding-left: 20px; }
+    code { background: #eee; padding: 2px 5px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Online Exam System with Auto-Grading</h1>
+
+    <div class="section">
+      <h2>🔐 Login/User Authentication Module</h2>
+      <p>The Login/User Authentication module verifies the user's identity before allowing access to the exam. The user is prompted for a username and password, which are checked against predefined credentials. If valid, the user proceeds to the exam; otherwise, access is denied. This ensures only authorized users can take the test, maintaining system integrity.</p>
+    </div>
+
+    <div class="section">
+      <h2>📝 Exam Conduction Module</h2>
+      <p>This module presents 15 multiple-choice questions to the user. Each question is displayed with four options, and the user's answers are collected. A 5-minute timer, implemented using Python's <code>time</code> module, ensures the exam is time-bound. The module uses basic Python structures like lists and dictionaries and is fully compatible with online compilers.</p>
+    </div>
+
+    <div class="section">
+      <h2>📊 Result Evaluation Module</h2>
+      <p>After the exam, this module compares the user's answers with the correct ones, calculates the total score, computes the percentage, and provides personalized feedback such as "Excellent", "Good Job", or "Needs Practice". If the time limit is exceeded, it auto-submits the test and displays the results instantly.</p>
+    </div>
+
+    <div class="section">
+      <h2>🛠️ Tools and Technologies Used</h2>
+      <ul>
+        <li><strong>Python 3:</strong> Core programming language</li>
+        <li><strong>Online Compiler (e.g., Replit, Programiz):</strong> Code execution without setup</li>
+        <li><strong>Console I/O:</strong> <code>input()</code> and <code>print()</code> for user interaction</li>
+        <li><strong>Data Structures:</strong> List & Dictionary for managing questions</li>
+        <li><strong>Timer:</strong> <code>time</code> module for 5-minute exam limit</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>🎯 Expected Outcomes</h2>
+      <ul>
+        <li>Automatic evaluation of exam answers</li>
+        <li>Time-limited exam submission</li>
+        <li>Instant display of result, percentage, and feedback</li>
+        <li>Lightweight, database-free execution in online compilers</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
