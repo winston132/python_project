@@ -3,23 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Online Exam with Auto-Grading</title>
+  <title>Online Exam with Timer and Auto-Grading</title>
   <style>
     body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
     .container { max-width: 800px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
     h1, h2 { color: #333; }
-    .section { margin-bottom: 30px; }
-    ul { padding-left: 20px; }
-    code { background: #eee; padding: 2px 5px; border-radius: 4px; }
     .question { margin-bottom: 20px; }
     .options label { display: block; margin-left: 10px; }
     button { padding: 10px 20px; font-size: 16px; margin-top: 10px; }
+    #timer { font-size: 18px; font-weight: bold; color: red; margin-bottom: 20px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Online Exam with Auto-Grading</h1>
-
+    <h1>Online Exam</h1>
+    <div id="timer">Time Remaining: 05:00</div>
     <div id="exam"></div>
     <button onclick="submitExam()">Submit Exam</button>
     <div id="result"></div>
@@ -29,10 +27,15 @@
     const questions = [
       { q: "What is 2 + 2?", options: ["3", "4", "5", "6"], answer: "4" },
       { q: "Capital of France?", options: ["London", "Berlin", "Paris", "Madrid"], answer: "Paris" },
-      { q: "Result of 3 * 3?", options: ["6", "8", "9", "12"], answer: "9" }
+      { q: "Result of 3 * 3?", options: ["6", "8", "9", "12"], answer: "9" },
+      { q: "Which is a Python keyword?", options: ["def", "add", "func", "define"], answer: "def" },
+      { q: "HTML stands for?", options: ["Hyper Trainer Marking Language", "Hyper Text Markup Language", "Hyper Tool Multi Language", "None"], answer: "Hyper Text Markup Language" }
     ];
 
     const examContainer = document.getElementById("exam");
+    const timerDisplay = document.getElementById("timer");
+    let timer, timeLeft = 300;
+
     questions.forEach((item, index) => {
       const div = document.createElement("div");
       div.className = "question";
@@ -43,7 +46,22 @@
       examContainer.appendChild(div);
     });
 
+    function startTimer() {
+      timer = setInterval(() => {
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          submitExam();
+          return;
+        }
+        let minutes = Math.floor(timeLeft / 60);
+        let seconds = timeLeft % 60;
+        timerDisplay.textContent = `Time Remaining: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        timeLeft--;
+      }, 1000);
+    }
+
     function submitExam() {
+      clearInterval(timer);
       let score = 0;
       questions.forEach((item, index) => {
         const selected = document.querySelector(`input[name='q${index}']:checked`);
@@ -63,7 +81,14 @@
         <p>Percentage: ${percentage.toFixed(2)}%</p>
         <p><strong>${feedback}</strong></p>
       `;
+
+      document.getElementById("exam").style.display = "none";
+      document.querySelector("button").style.display = "none";
+      timerDisplay.style.display = "none";
     }
+
+    // Start the timer on page load
+    window.onload = startTimer;
   </script>
 </body>
 </html>
