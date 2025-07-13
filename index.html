@@ -36,15 +36,60 @@
   </div>
 
   <script>
-    const validUserId = "192411158";
-    const validPassword = "CSA0826";
+    // Generate user IDs and credentials
+    const studentCredentials = {};
+    for (let i = 1000; i <= 1500; i++) {
+      studentCredentials[`192411${i}`] = "CSA0826"; // Python exam
+      studentCredentials[`192311${i}`] = "CSA0332"; // Data Structures exam
+    }
+
+    let examQuestions = [];
+
+    const pythonQuestions = [
+      { q: "Which is a Python keyword?", options: ["def", "add", "func", "define"], answer: "def" },
+      { q: "Which data type is immutable in Python?", options: ["List", "Set", "Dictionary", "Tuple"], answer: "Tuple" },
+      { q: "What does the len() function do in Python?", options: ["Calculates average", "Counts elements", "Sorts items", "Deletes items"], answer: "Counts elements" },
+      { q: "Which symbol is used to define a function in Python?", options: ["func", "def", "function", "define"], answer: "def" },
+      { q: "What is the output of print(type(10))?", options: ["str", "float", "int", "bool"], answer: "int" },
+      { q: "Which of these is a loop structure in Python?", options: ["repeat", "for", "do while", "loop"], answer: "for" },
+      { q: "Which function converts string to integer in Python?", options: ["str()", "int()", "float()", "bool()"], answer: "int()" },
+      { q: "Which module is used for regular expressions in Python?", options: ["regex", "re", "match", "pyregex"], answer: "re" },
+      { q: "How do you start a comment in Python?", options: ["--", "#", "//", "/*"], answer: "#" },
+      { q: "Which keyword is used for loop in Python?", options: ["iterate", "while", "loop", "run"], answer: "while" }
+    ];
+
+    const dsQuestions = [
+      { q: "What data structure uses FIFO order?", options: ["Stack", "Queue", "Tree", "Graph"], answer: "Queue" },
+      { q: "Which is not a linear data structure?", options: ["Array", "Queue", "Stack", "Tree"], answer: "Tree" },
+      { q: "Which data structure uses LIFO?", options: ["Queue", "Array", "Stack", "Graph"], answer: "Stack" },
+      { q: "Best case time complexity of binary search?", options: ["O(n)", "O(log n)", "O(1)", "O(n log n)"], answer: "O(1)" },
+      { q: "What is the height of a balanced binary tree with n nodes?", options: ["log n", "n", "n/2", "1"], answer: "log n" },
+      { q: "Which data structure is used for BFS?", options: ["Stack", "Queue", "Heap", "Tree"], answer: "Queue" },
+      { q: "Which of these is not a tree traversal?", options: ["Inorder", "Preorder", "Postorder", "Aroundorder"], answer: "Aroundorder" },
+      { q: "Which structure is best for priority tasks?", options: ["Stack", "Queue", "Priority Queue", "Array"], answer: "Priority Queue" },
+      { q: "Which DS is used for function call management?", options: ["Array", "Queue", "Stack", "Graph"], answer: "Stack" },
+      { q: "Time complexity of linear search?", options: ["O(n)", "O(log n)", "O(1)", "O(n log n)"], answer: "O(n)" }
+    ];
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
 
     function validateLogin() {
-      const enteredUserId = document.getElementById("userId").value;
-      const enteredPassword = document.getElementById("password").value;
+      const enteredUserId = document.getElementById("userId").value.trim();
+      const enteredPassword = document.getElementById("password").value.trim();
       const loginError = document.getElementById("loginError");
 
-      if (enteredUserId === validUserId && enteredPassword === validPassword) {
+      if (studentCredentials[enteredUserId] === enteredPassword) {
+        const is1924 = enteredUserId.startsWith("1924");
+        const is1923 = enteredUserId.startsWith("1923");
+        examQuestions = is1923 ? [...dsQuestions] : [...pythonQuestions];
+        examQuestions = shuffle(examQuestions);
+
         document.getElementById("login").style.display = "none";
         document.getElementById("examSection").style.display = "block";
         startTimer();
@@ -54,29 +99,16 @@
       }
     }
 
-    const questions = [
-      { q: "What is 2 + 2?", options: ["3", "4", "5", "6"], answer: "4" },
-      { q: "Capital of France?", options: ["London", "Berlin", "Paris", "Madrid"], answer: "Paris" },
-      { q: "Result of 3 * 3?", options: ["6", "8", "9", "12"], answer: "9" },
-      { q: "Which is a Python keyword?", options: ["def", "add", "func", "define"], answer: "def" },
-      { q: "HTML stands for?", options: ["Hyper Trainer Marking Language", "Hyper Text Markup Language", "Hyper Tool Multi Language", "None"], answer: "Hyper Text Markup Language" },
-      { q: "Which data type is immutable in Python?", options: ["List", "Set", "Dictionary", "Tuple"], answer: "Tuple" },
-      { q: "What does the len() function do in Python?", options: ["Calculates average", "Counts elements", "Sorts items", "Deletes items"], answer: "Counts elements" },
-      { q: "Which symbol is used to define a function in Python?", options: ["func", "def", "function", "define"], answer: "def" },
-      { q: "What is the output of print(type(10))?", options: ["str", "float", "int", "bool"], answer: "int" },
-      { q: "Which of these is a loop structure in Python?", options: ["repeat", "for", "do while", "loop"], answer: "for" }
-    ];
-
     const examContainer = document.getElementById("exam");
     const timerDisplay = document.getElementById("timer");
     let timer, timeLeft = 300;
 
     function loadQuestions() {
-      questions.forEach((item, index) => {
+      examQuestions.forEach((item, index) => {
         const div = document.createElement("div");
         div.className = "question";
         div.innerHTML = `<strong>${index + 1}. ${item.q}</strong>`;
-        item.options.forEach(option => {
+        shuffle(item.options).forEach(option => {
           div.innerHTML += `<div class="options"><label><input type="radio" name="q${index}" value="${option}"> ${option}</label></div>`;
         });
         examContainer.appendChild(div);
@@ -100,13 +132,13 @@
     function submitExam() {
       clearInterval(timer);
       let score = 0;
-      questions.forEach((item, index) => {
+      examQuestions.forEach((item, index) => {
         const selected = document.querySelector(`input[name='q${index}']:checked`);
         if (selected && selected.value === item.answer) {
           score++;
         }
       });
-      const percentage = (score / questions.length) * 100;
+      const percentage = (score / examQuestions.length) * 100;
       let feedback = "Needs Practice.";
       if (percentage === 100) feedback = "Excellent Work!";
       else if (percentage >= 70) feedback = "Good Job!";
@@ -114,7 +146,7 @@
 
       document.getElementById("result").innerHTML = `
         <h2>Result:</h2>
-        <p>Score: ${score} / ${questions.length}</p>
+        <p>Score: ${score} / ${examQuestions.length}</p>
         <p>Percentage: ${percentage.toFixed(2)}%</p>
         <p><strong>${feedback}</strong></p>
       `;
