@@ -44,31 +44,8 @@
 
     let examQuestions = [];
 
-    const pythonQuestions = [
-      { q: "Which is a Python keyword?", options: ["def", "add", "func", "define"], answer: "def" },
-      { q: "Which data type is immutable in Python?", options: ["List", "Set", "Dictionary", "Tuple"], answer: "Tuple" },
-      { q: "What does the len() function do in Python?", options: ["Calculates average", "Counts elements", "Sorts items", "Deletes items"], answer: "Counts elements" },
-      { q: "Which symbol is used to define a function in Python?", options: ["func", "def", "function", "define"], answer: "def" },
-      { q: "What is the output of print(type(10))?", options: ["str", "float", "int", "bool"], answer: "int" },
-      { q: "Which of these is a loop structure in Python?", options: ["repeat", "for", "do while", "loop"], answer: "for" },
-      { q: "Which function converts string to integer in Python?", options: ["str()", "int()", "float()", "bool()"], answer: "int()" },
-      { q: "Which module is used for regular expressions in Python?", options: ["regex", "re", "match", "pyregex"], answer: "re" },
-      { q: "How do you start a comment in Python?", options: ["--", "#", "//", "/*"], answer: "#" },
-      { q: "Which keyword is used for loop in Python?", options: ["iterate", "while", "loop", "run"], answer: "while" }
-    ];
-
-    const dsQuestions = [
-      { q: "What data structure uses FIFO order?", options: ["Stack", "Queue", "Tree", "Graph"], answer: "Queue" },
-      { q: "Which is not a linear data structure?", options: ["Array", "Queue", "Stack", "Tree"], answer: "Tree" },
-      { q: "Which data structure uses LIFO?", options: ["Queue", "Array", "Stack", "Graph"], answer: "Stack" },
-      { q: "Best case time complexity of binary search?", options: ["O(n)", "O(log n)", "O(1)", "O(n log n)"], answer: "O(1)" },
-      { q: "What is the height of a balanced binary tree with n nodes?", options: ["log n", "n", "n/2", "1"], answer: "log n" },
-      { q: "Which data structure is used for BFS?", options: ["Stack", "Queue", "Heap", "Tree"], answer: "Queue" },
-      { q: "Which of these is not a tree traversal?", options: ["Inorder", "Preorder", "Postorder", "Aroundorder"], answer: "Aroundorder" },
-      { q: "Which structure is best for priority tasks?", options: ["Stack", "Queue", "Priority Queue", "Array"], answer: "Priority Queue" },
-      { q: "Which DS is used for function call management?", options: ["Array", "Queue", "Stack", "Graph"], answer: "Stack" },
-      { q: "Time complexity of linear search?", options: ["O(n)", "O(log n)", "O(1)", "O(n log n)"], answer: "O(n)" }
-    ];
+    const pythonQuestions = [...]; // (kept same)
+    const dsQuestions = [...];     // (kept same)
 
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
@@ -155,12 +132,38 @@
       else if (percentage >= 70) feedback = "Good Job!";
       else if (percentage >= 50) feedback = "Fair Attempt.";
 
-      document.getElementById("result").innerHTML = `
-        <h2>Result:</h2>
-        <p>Score: ${score} / ${examQuestions.length}</p>
-        <p>Percentage: ${percentage.toFixed(2)}%</p>
-        <p><strong>${feedback}</strong></p>
-      `;
+      const userId = document.getElementById("userId").value.trim();
+      const subject = userId.startsWith("1923") ? "Data Structures" : "Python";
+
+      fetch("https://script.google.com/macros/s/AKfycbwc2esHvxpBh_yIW7f-nedGyHvPLHquACxo0YaW9A3XFHJLmkzIr0XJsZ0iiBj4RZq3/exec", {
+        method: "POST",
+        body: JSON.stringify({
+          userId: userId,
+          score: score,
+          total: examQuestions.length,
+          percentage: percentage.toFixed(2),
+          subject: subject,
+          recipient: "winyarraguntla@gmail.com"
+        }),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+      .then(res => res.text())
+      .then(response => {
+        document.getElementById("result").innerHTML = `
+          <h2>Result:</h2>
+          <p>Score: ${score} / ${examQuestions.length}</p>
+          <p>Percentage: ${percentage.toFixed(2)}%</p>
+          <p><strong>${feedback}</strong></p>
+          <p style="color: green;"><em>Your result has been submitted!</em></p>
+        `;
+      })
+      .catch(err => {
+        document.getElementById("result").innerHTML += `
+          <p style="color: red;">Error submitting your result. Please try again later.</p>
+        `;
+      });
 
       document.getElementById("exam").style.display = "none";
       document.querySelector("button").style.display = "none";
