@@ -1,1 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Online Exam with Timer and Auto-Grading</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+    .container { max-width: 800px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    h1, h2 { color: #333; }
+    .question { margin-bottom: 20px; }
+    .options label { display: block; margin-left: 10px; }
+    button { padding: 10px 20px; font-size: 16px; margin-top: 10px; }
+    #timer { font-size: 18px; font-weight: bold; color: red; margin-bottom: 20px; }
+    #login { margin-bottom: 30px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Online Exam</h1>
 
+    <div id="login">
+      <h2>Login</h2>
+      <label>User ID: <input type="text" id="userId"></label><br><br>
+      <label>Password: <input type="password" id="password"></label><br><br>
+      <button onclick="validateLogin()">Login</button>
+      <p id="loginError" style="color: red;"></p>
+    </div>
+
+    <div id="examSection" style="display:none;">
+      <div id="timer">Time Remaining: 05:00</div>
+      <div id="exam"></div>
+      <button onclick="submitExam()">Submit Exam</button>
+      <div id="result"></div>
+    </div>
+  </div>
+
+  <script>
+    const studentCredentials = {};
+    for (let i = 1000; i <= 1500; i++) {
+      studentCredentials[`192411${i}`] = "CSA0826";
+      studentCredentials[`192311${i}`] = "CSA0332";
+    }
+
+    let examQuestions = [];
+
+    const pythonQuestions = [...]; // (kept same)
+    const dsQuestions = [...];     // (kept same)
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function validateLogin() {
+      const enteredUserId = document.getElementById("userId").value.trim();
+      const enteredPassword = document.getElementById("password").value.trim();
+      const loginError = document.getElementById("loginError");
+
+      if (!enteredUserId || !enteredPassword) {
+        loginError.textContent = "Please enter both User ID and Password.";
+        return;
+      }
+
+      if (!(enteredUserId in studentCredentials)) {
+        loginError.textContent = "User ID not found.";
+        return;
+      }
+
+      if (studentCredentials[enteredUserId] !== enteredPassword) {
+        loginError.textContent = "Incorrect password.";
+        return;
+      }
+
+      const is1924 = enteredUserId.startsWith("1924");
+      const is1923 = enteredUserId.startsWith("1923");
+      examQuestions = is1923 ? [...dsQuestions] : [...pythonQuestions];
+      examQuestions = shuffle(examQuestions);
+
+      document.getElementById("login").style.display = "none";
+      document.getElementById("examSection").style.display = "block";
+      startTimer();
+      loadQuestions();
+    }
+
+    const examContainer = document.getElementById("exam");
+    const timerDisplay = document.getElementById("timer");
+    let timer, timeLeft = 300;
+
+    function loadQuestions() {
+      examContainer.innerHTML = "";
+      examQuestions.forEach((item, index) => {
+        const div = document.createElement("div");
+        div.className = "question";
+        div.innerHTML = `<strong>${index + 1}. ${item.q}</strong>`;
+        shuffle(item.options).forEach(option => {
+          div.innerHTML += `<div class="options"><label><input type="radio" name="q${index}" value="${option}"> ${option}</label></div>`;
+        });
+        examContainer.appendChild(div);
+      });
+    }
+
+    function startTimer() {
+      timer = setInterval(() => {
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          submitExam();
+          return;
+        }
+        let minutes = Math.floor(timeLeft / 60);
+        let seconds = timeLeft % 60;
+        timerDisplay.textContent = `Time Remaining: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        timeLeft--;
+      }, 1000);
+    }
+
+    function submitExam() {
+      clearInterval(timer);
+      let score = 0;
+      examQuestions.forEach((item, index) => {
+        const selected = document.querySelector(`input[name='q${index}']:checked`);
+        if (selected && selected.value === item.answer) {
+          score++;
+        }
+      });
+      const percentage = (score / examQuestions.length) * 100;
+      let feedback = "Needs Practice.";
+      if (percentage === 100) feedback = "Excellent Work!";
+      else if (percentage >= 70) feedback = "Good Job!";
+      else if (percentage >= 50) feedback = "Fair Attempt.";
+
+      const userId = document.getElementById("userId").value.trim();
+      const subject = userId.startsWith("1923") ? "Data Structures" : "Python";
+
+      fetch("https://script.google.com/macros/s/AKfycbwc2esHvxpBh_yIW7f-nedGyHvPLHquACxo0YaW9A3XFHJLmkzIr0XJsZ0iiBj4RZq3/exec", {
+        method: "POST",
+        body: JSON.stringify({
+          userId: userId,
+          score: score,
+          total: examQuestions.length,
+          percentage: percentage.toFixed(2),
+          subject: subject,
+          recipient: "winyarraguntla@gmail.com"
+        }),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+      .then(res => res.text())
+      .then(response => {
+        document.getElementById("result").innerHTML = `
+          <h2>Result:</h2>
+          <p>Score: ${score} / ${examQuestions.length}</p>
+          <p>Percentage: ${percentage.toFixed(2)}%</p>
+          <p><strong>${feedback}</strong></p>
+          <p style="color: green;"><em>Your result has been submitted!</em></p>
+        `;
+      })
+      .catch(err => {
+        document.getElementById("result").innerHTML += `
+          <p style="color: red;">Error submitting your result. Please try again later.</p>
+        `;
+      });
+
+      document.getElementById("exam").style.display = "none";
+      document.querySelector("button").style.display = "none";
+      timerDisplay.style.display = "none";
+    }
+  </script>
+</body>
+</html>
