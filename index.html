@@ -1,160 +1,105 @@
+from flask import Flask, render_template_string, request, redirect, session
+import random
+
+app = Flask(__name__)
+app.secret_key = "your_secret_key"
+
+# Create 1000 credentials
+users = {f"192411{i}": "CSA0826" for i in range(1000, 1501)}
+users.update({f"192311{i}": "CSA0332" for i in range(1000, 1501)})
+
+python_questions = [
+    ("Which is a Python keyword?", ["def", "add", "func", "define"], "def"),
+    ("Which data type is immutable?", ["List", "Set", "Dictionary", "Tuple"], "Tuple"),
+    ("What does len() do?", ["Counts elements", "Sorts items", "Deletes items", "Calculates average"], "Counts elements"),
+    ("Which symbol defines a function?", ["func", "def", "function", "define"], "def"),
+    ("Output of type(10)?", ["int", "float", "str", "bool"], "int"),
+    ("Loop structure in Python?", ["repeat", "for", "do while", "loop"], "for"),
+    ("Convert string to integer?", ["str()", "int()", "float()", "bool()"], "int()"),
+    ("Module for regex?", ["regex", "re", "match", "pyregex"], "re"),
+    ("Start comment in Python?", ["--", "#", "//", "/*"], "#"),
+    ("Keyword for loop?", ["iterate", "while", "loop", "run"], "while")
+]
+
+ds_questions = [
+    ("FIFO data structure?", ["Stack", "Queue", "Tree", "Graph"], "Queue"),
+    ("Not linear structure?", ["Array", "Queue", "Stack", "Tree"], "Tree"),
+    ("LIFO structure?", ["Queue", "Array", "Stack", "Graph"], "Stack"),
+    ("Best case of binary search?", ["O(n)", "O(log n)", "O(1)", "O(n log n)"], "O(1)"),
+    ("Height of balanced tree?", ["log n", "n", "n/2", "1"], "log n"),
+    ("BFS uses?", ["Stack", "Queue", "Heap", "Tree"], "Queue"),
+    ("Invalid traversal?", ["Inorder", "Preorder", "Postorder", "Aroundorder"], "Aroundorder"),
+    ("For priority tasks?", ["Stack", "Queue", "Priority Queue", "Array"], "Priority Queue"),
+    ("Function call mgmt?", ["Array", "Queue", "Stack", "Graph"], "Stack"),
+    ("Linear search time?", ["O(n)", "O(log n)", "O(1)", "O(n log n)"], "O(n)")
+]
+
+@app.route('/', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        uid = request.form['user_id']
+        pwd = request.form['password']
+        if uid in users and users[uid] == pwd:
+            session['user_id'] = uid
+            session['questions'] = random.sample(python_questions if uid.startswith("1924") else ds_questions, 10)
+            return redirect('/exam')
+        else:
+            return render_template_string(login_page, error="Invalid ID or password")
+    return render_template_string(login_page, error="")
+
+@app.route('/exam', methods=['GET', 'POST'])
+def exam():
+    if 'user_id' not in session:
+        return redirect('/')
+    if request.method == 'POST':
+        questions = session['questions']
+        score = 0
+        for i, (_, opts, ans) in enumerate(questions):
+            if request.form.get(f'q{i}') == ans:
+                score += 1
+        session.clear()
+        return f\"\"\"<h2>Result</h2>
+        <p>Score: {score}/10</p>
+        <p>Percentage: {score * 10}%</p>
+        <a href='/'>Return</a>\"\"\"
+    return render_template_string(exam_page, questions=session['questions'])
+
+# Templates
+login_page = \"\"\"\"
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Online Exam with Timer and Auto-Grading</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
-    .container { max-width: 800px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    h1, h2 { color: #333; }
-    .question { margin-bottom: 20px; }
-    .options label { display: block; margin-left: 10px; }
-    button { padding: 10px 20px; font-size: 16px; margin-top: 10px; }
-    #timer { font-size: 18px; font-weight: bold; color: red; margin-bottom: 20px; }
-    #login { margin-bottom: 30px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Online Exam</h1>
+<html><body>
+<h2>Student Login</h2>
+<form method='POST'>
+  User ID: <input name='user_id' required><br>
+  Password: <input name='password' type='password' required><br><br>
+  <input type='submit' value='Login'>
+</form>
+<p style='color:red;'>{{ error }}</p>
+</body></html>
+\"\"\"
 
-    <div id="login">
-      <h2>Login</h2>
-      <label>User ID: <input type="text" id="userId"></label><br><br>
-      <label>Password: <input type="password" id="password"></label><br><br>
-      <button onclick="validateLogin()">Login</button>
-      <p id="loginError" style="color: red;"></p>
-    </div>
+exam_page = \"\"\"\"
+<!DOCTYPE html>
+<html><body>
+<h2>Online Exam - Time: 5 mins</h2>
+<form method='POST' id='examForm'>
+{% for idx, (q, opts, ans) in enumerate(questions) %}
+  <p><b>{{ idx+1 }}. {{ q }}</b></p>
+  {% for opt in opts|random %}
+    <label><input type='radio' name='q{{ idx }}' value='{{ opt }}'> {{ opt }}</label><br>
+  {% endfor %}
+{% endfor %}
+<br><input type='submit' value='Submit Exam'>
+</form>
+<script>
+let mins = 4, secs = 60;
+let timer = setInterval(() => {
+  if (--secs < 0) { secs = 59; mins--; }
+  if (mins < 0) { clearInterval(timer); document.getElementById('examForm').submit(); }
+}, 1000);
+</script>
+</body></html>
+\"\"\"
 
-    <div id="examSection" style="display:none;">
-      <div id="timer">Time Remaining: 05:00</div>
-      <div id="exam"></div>
-      <button onclick="submitExam()">Submit Exam</button>
-      <div id="result"></div>
-    </div>
-  </div>
-
-  <script>
-    // Generate user IDs and credentials
-    const studentCredentials = {};
-    for (let i = 1000; i <= 1500; i++) {
-      studentCredentials[`192411${i}`] = "CSA0826"; // Python exam
-      studentCredentials[`192311${i}`] = "CSA0332"; // Data Structures exam
-    }
-
-    let examQuestions = [];
-
-    const pythonQuestions = [
-      { q: "Which is a Python keyword?", options: ["def", "add", "func", "define"], answer: "def" },
-      { q: "Which data type is immutable in Python?", options: ["List", "Set", "Dictionary", "Tuple"], answer: "Tuple" },
-      { q: "What does the len() function do in Python?", options: ["Calculates average", "Counts elements", "Sorts items", "Deletes items"], answer: "Counts elements" },
-      { q: "Which symbol is used to define a function in Python?", options: ["func", "def", "function", "define"], answer: "def" },
-      { q: "What is the output of print(type(10))?", options: ["str", "float", "int", "bool"], answer: "int" },
-      { q: "Which of these is a loop structure in Python?", options: ["repeat", "for", "do while", "loop"], answer: "for" },
-      { q: "Which function converts string to integer in Python?", options: ["str()", "int()", "float()", "bool()"], answer: "int()" },
-      { q: "Which module is used for regular expressions in Python?", options: ["regex", "re", "match", "pyregex"], answer: "re" },
-      { q: "How do you start a comment in Python?", options: ["--", "#", "//", "/*"], answer: "#" },
-      { q: "Which keyword is used for loop in Python?", options: ["iterate", "while", "loop", "run"], answer: "while" }
-    ];
-
-    const dsQuestions = [
-      { q: "What data structure uses FIFO order?", options: ["Stack", "Queue", "Tree", "Graph"], answer: "Queue" },
-      { q: "Which is not a linear data structure?", options: ["Array", "Queue", "Stack", "Tree"], answer: "Tree" },
-      { q: "Which data structure uses LIFO?", options: ["Queue", "Array", "Stack", "Graph"], answer: "Stack" },
-      { q: "Best case time complexity of binary search?", options: ["O(n)", "O(log n)", "O(1)", "O(n log n)"], answer: "O(1)" },
-      { q: "What is the height of a balanced binary tree with n nodes?", options: ["log n", "n", "n/2", "1"], answer: "log n" },
-      { q: "Which data structure is used for BFS?", options: ["Stack", "Queue", "Heap", "Tree"], answer: "Queue" },
-      { q: "Which of these is not a tree traversal?", options: ["Inorder", "Preorder", "Postorder", "Aroundorder"], answer: "Aroundorder" },
-      { q: "Which structure is best for priority tasks?", options: ["Stack", "Queue", "Priority Queue", "Array"], answer: "Priority Queue" },
-      { q: "Which DS is used for function call management?", options: ["Array", "Queue", "Stack", "Graph"], answer: "Stack" },
-      { q: "Time complexity of linear search?", options: ["O(n)", "O(log n)", "O(1)", "O(n log n)"], answer: "O(n)" }
-    ];
-
-    function shuffle(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-      }
-      return array;
-    }
-
-    function validateLogin() {
-      const enteredUserId = document.getElementById("userId").value.trim();
-      const enteredPassword = document.getElementById("password").value.trim();
-      const loginError = document.getElementById("loginError");
-
-      if (studentCredentials[enteredUserId] === enteredPassword) {
-        const is1924 = enteredUserId.startsWith("1924");
-        const is1923 = enteredUserId.startsWith("1923");
-        examQuestions = is1923 ? [...dsQuestions] : [...pythonQuestions];
-        examQuestions = shuffle(examQuestions);
-
-        document.getElementById("login").style.display = "none";
-        document.getElementById("examSection").style.display = "block";
-        startTimer();
-        loadQuestions();
-      } else {
-        loginError.textContent = "Invalid User ID or Password";
-      }
-    }
-
-    const examContainer = document.getElementById("exam");
-    const timerDisplay = document.getElementById("timer");
-    let timer, timeLeft = 300;
-
-    function loadQuestions() {
-      examQuestions.forEach((item, index) => {
-        const div = document.createElement("div");
-        div.className = "question";
-        div.innerHTML = `<strong>${index + 1}. ${item.q}</strong>`;
-        shuffle(item.options).forEach(option => {
-          div.innerHTML += `<div class="options"><label><input type="radio" name="q${index}" value="${option}"> ${option}</label></div>`;
-        });
-        examContainer.appendChild(div);
-      });
-    }
-
-    function startTimer() {
-      timer = setInterval(() => {
-        if (timeLeft <= 0) {
-          clearInterval(timer);
-          submitExam();
-          return;
-        }
-        let minutes = Math.floor(timeLeft / 60);
-        let seconds = timeLeft % 60;
-        timerDisplay.textContent = `Time Remaining: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        timeLeft--;
-      }, 1000);
-    }
-
-    function submitExam() {
-      clearInterval(timer);
-      let score = 0;
-      examQuestions.forEach((item, index) => {
-        const selected = document.querySelector(`input[name='q${index}']:checked`);
-        if (selected && selected.value === item.answer) {
-          score++;
-        }
-      });
-      const percentage = (score / examQuestions.length) * 100;
-      let feedback = "Needs Practice.";
-      if (percentage === 100) feedback = "Excellent Work!";
-      else if (percentage >= 70) feedback = "Good Job!";
-      else if (percentage >= 50) feedback = "Fair Attempt.";
-
-      document.getElementById("result").innerHTML = `
-        <h2>Result:</h2>
-        <p>Score: ${score} / ${examQuestions.length}</p>
-        <p>Percentage: ${percentage.toFixed(2)}%</p>
-        <p><strong>${feedback}</strong></p>
-      `;
-
-      document.getElementById("exam").style.display = "none";
-      document.querySelector("button").style.display = "none";
-      timerDisplay.style.display = "none";
-    }
-  </script>
-</body>
-</html>
+if __name__ == '__main__':
+    app.run(debug=True)
